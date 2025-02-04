@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  staytus-push-notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production  # Specify the target stage for the production build
+    restart: always
+    ports:
+      - "8080:3000"
+    links:
+      - mongodb_push_log_db
+    depends_on:
+      - mongodb_push_log_db
+    environment:
+      WAIT_HOSTS: mongodb_push_log_db:27017
+    env_file:
+      - .env
+    networks:
+      - node-push-notification-service-network
+
+  mongodb_push_log_db:
+    image: mongo:6.0
+    env_file:
+      - .env
+    ports:
+      - ${MONGODB_PORT}:27017
+    volumes:
+      - mongodb-push-data-logs:/data/db
+    command: [--auth]
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+    networks:
+      - node-push-notification-service-network
+
+networks:
+  node-push-notification-service-network:
+    driver: bridge
+
+volumes:
+  mongodb-push-data-logs:
+
